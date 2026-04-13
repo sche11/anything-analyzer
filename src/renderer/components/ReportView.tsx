@@ -18,7 +18,7 @@ interface ReportViewProps {
   isAnalyzing: boolean
   analysisError: string | null
   streamingContent: string
-  onReAnalyze: () => void
+  onReAnalyze: (purpose?: string) => void
 }
 
 // Format token count for display

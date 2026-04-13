@@ -145,10 +145,10 @@ function App(): React.ReactElement {
   }, [])
 
   // Analyze handler
-  const handleAnalyze = useCallback(async () => {
+  const handleAnalyze = useCallback(async (purpose?: string) => {
     if (!currentSessionId) return
     setActiveTab('report')
-    await startAnalysis(currentSessionId)
+    await startAnalysis(currentSessionId, purpose)
   }, [currentSessionId, startAnalysis])
 
   return (
