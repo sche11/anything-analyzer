@@ -66,6 +66,38 @@ function sanitizeForJson(obj: unknown): unknown {
 export class LLMRouter {
   constructor(private config: LLMProviderConfig) {}
 
+  /**
+   * Safely parse JSON from a fetch Response.
+   * Throws a clear error if the body is not valid JSON (e.g. HTML error pages)
+   * or if the API returned a structured error (Anthropic { type: "error" }).
+   */
+  private async safeParseJson<T>(response: Response): Promise<T> {
+    const text = await response.text();
+    let data: unknown;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // Likely HTML or plain text — show a truncated preview
+      const preview = text.slice(0, 200).replace(/\n/g, ' ');
+      throw new Error(`LLM 返回了非 JSON 响应 (${response.status}): ${preview}`);
+    }
+
+    // Anthropic error format: { type: "error", error: { type, message } }
+    const obj = data as Record<string, unknown>;
+    if (obj.type === 'error' && typeof obj.error === 'object' && obj.error !== null) {
+      const err = obj.error as Record<string, unknown>;
+      throw new Error(`LLM API 错误: ${err.type ?? 'unknown'} — ${err.message ?? JSON.stringify(err)}`);
+    }
+
+    // OpenAI error format: { error: { message, type, code } }
+    if (typeof obj.error === 'object' && obj.error !== null && !obj.type) {
+      const err = obj.error as Record<string, unknown>;
+      throw new Error(`LLM API 错误: ${err.message ?? JSON.stringify(err)}`);
+    }
+
+    return data as T;
+  }
+
   async complete(
     messages: ChatMessage[],
     onChunk?: (chunk: string) => void,
@@ -143,7 +175,7 @@ export class LLMRouter {
         body: JSON.stringify(sanitizeForJson(body)),
       });
 
-      const data = (await response.json()) as {
+      const data = await this.safeParseJson<{
         choices: Array<{
           message: {
             content: string | null;
@@ -153,7 +185,11 @@ export class LLMRouter {
           finish_reason: string;
         }>;
         usage?: { prompt_tokens: number; completion_tokens: number };
-      };
+      }>(response);
+
+      if (!Array.isArray(data.choices) || data.choices.length === 0) {
+        throw new Error(`LLM 响应格式异常: 缺少 choices 字段 — ${JSON.stringify(data).slice(0, 200)}`);
+      }
 
       totalPromptTokens += data.usage?.prompt_tokens || 0;
       totalCompletionTokens += data.usage?.completion_tokens || 0;
@@ -254,14 +290,18 @@ export class LLMRouter {
         body: JSON.stringify(sanitizeForJson(body)),
       });
 
-      const data = (await response.json()) as {
+      const data = await this.safeParseJson<{
         content: AnthropicContentBlock[];
         stop_reason: string;
         usage?: { input_tokens: number; output_tokens: number };
-      };
+      }>(response);
 
       totalPromptTokens += data.usage?.input_tokens || 0;
       totalCompletionTokens += data.usage?.output_tokens || 0;
+
+      if (!Array.isArray(data.content)) {
+        throw new Error(`LLM 响应格式异常: 缺少 content 字段 — ${JSON.stringify(data).slice(0, 200)}`);
+      }
 
       const toolUseBlocks = data.content.filter(
         (b): b is AnthropicToolUseBlock => b.type === "tool_use",
@@ -337,10 +377,10 @@ export class LLMRouter {
 
     if (stream) return this.parseOpenAIStream(response, onChunk!);
 
-    const data = (await response.json()) as {
+    const data = await this.safeParseJson<{
       choices: Array<{ message: { content: string } }>;
       usage?: { prompt_tokens: number; completion_tokens: number };
-    };
+    }>(response);
     return {
       content: data.choices[0]?.message?.content || "",
       promptTokens: data.usage?.prompt_tokens || 0,
@@ -377,10 +417,10 @@ export class LLMRouter {
 
     if (stream) return this.parseResponsesStream(response, onChunk!);
 
-    const data = (await response.json()) as {
+    const data = await this.safeParseJson<{
       output_text?: string;
       usage?: { input_tokens: number; output_tokens: number };
-    };
+    }>(response);
     return {
       content: data.output_text || "",
       promptTokens: data.usage?.input_tokens || 0,
@@ -418,10 +458,13 @@ export class LLMRouter {
 
     if (stream) return this.parseAnthropicStream(response, onChunk!);
 
-    const data = (await response.json()) as {
+    const data = await this.safeParseJson<{
       content: Array<{ type: string; text: string }>;
       usage?: { input_tokens: number; output_tokens: number };
-    };
+    }>(response);
+    if (!Array.isArray(data.content)) {
+      throw new Error(`LLM 响应格式异常: 缺少 content 字段 — ${JSON.stringify(data).slice(0, 200)}`);
+    }
     const content = data.content
       .filter((c) => c.type === "text")
       .map((c) => c.text)
@@ -591,11 +634,16 @@ export class LLMRouter {
       }
       if (!response.ok) {
         const errorBody = await response.text().catch(() => "");
-        throw new Error(`LLM API error ${response.status}: ${errorBody}`);
+        const host = (() => { try { return new URL(url).host; } catch { return url; } })();
+        throw new Error(`LLM 请求失败 (${host}): ${response.status} ${errorBody.slice(0, 200)}`);
       }
       return response;
     } catch (err) {
       clearTimeout(timeout);
+      // Re-throw our own HTTP errors directly; only diagnose network-level errors
+      if (err instanceof Error && err.message.startsWith('LLM 请求失败')) {
+        throw err;
+      }
       throw new Error(this.diagnoseNetworkError(err as Error, url));
     }
   }
