@@ -82,31 +82,64 @@ h1{font-size:20px;text-align:center;margin-bottom:8px;color:#f8fafc}
   <div id="tab-ios" class="tab-content${platform === "ios" ? " active" : ""}">
     <div class="steps">
       <h2>iOS 安装步骤</h2>
-      <div class="step"><span class="step-num">1</span><span>点击上方按钮下载证书，在弹出窗口中选择「允许」</span></div>
-      <div class="step"><span class="step-num">2</span><span>打开「设置」→「通用」→「VPN 与设备管理」→ 选择已下载的描述文件</span></div>
-      <div class="step"><span class="step-num">3</span><span>点击「安装」并输入锁屏密码确认</span></div>
-      <div class="step"><span class="step-num">4</span><span>前往「设置」→「通用」→「关于本机」→「证书信任设置」</span></div>
-      <div class="step"><span class="step-num">5</span><span>开启「Anything Analyzer CA」的完全信任开关</span></div>
+      <div class="step"><span class="step-num">1</span><span>确保 iPhone/iPad 与电脑连接在<strong>同一局域网</strong>下</span></div>
+      <div class="step"><span class="step-num">2</span><span>打开 iPhone 的「设置」→「Wi-Fi」→ 点击当前连接的 Wi-Fi 名称右侧的 <strong>ⓘ</strong> 按钮</span></div>
+      <div class="step"><span class="step-num">3</span><span>滚动到底部，点击「配置代理」→ 选择「手动」→ 填写服务器为<strong>电脑的 IP 地址</strong>，端口为 <strong>代理端口号</strong>（默认 8888）→ 点击「存储」</span></div>
+      <div class="step"><span class="step-num">4</span><span>打开 Safari 浏览器（<strong>必须用 Safari</strong>，其他浏览器无法触发描述文件安装），访问本页面并点击上方「下载证书」按钮</span></div>
+      <div class="step"><span class="step-num">5</span><span>弹出「此网站正尝试下载一个配置描述文件，要允许吗？」→ 点击「允许」</span></div>
+      <div class="step"><span class="step-num">6</span><span>提示「已下载描述文件」后，打开「设置」→「通用」→「VPN 与设备管理」（或「描述文件与设备管理」）</span></div>
+      <div class="step"><span class="step-num">7</span><span>找到「Anything Analyzer CA」描述文件，点击进入 → 点击右上角「安装」→ 输入<strong>锁屏密码</strong> → 再次点击「安装」确认</span></div>
+      <div class="step"><span class="step-num">8</span><span><strong>⚠ 关键步骤：</strong>前往「设置」→「通用」→「关于本机」→ 滚动到最底部 → 点击「证书信任设置」</span></div>
+      <div class="step"><span class="step-num">9</span><span>在「针对根证书启用完全信任」列表中，找到「Anything Analyzer CA」→ <strong>打开右侧开关</strong> → 弹出警告框点击「继续」</span></div>
+      <div class="step"><span class="step-num">10</span><span>✅ 安装完成！打开 Safari 访问任意 HTTPS 网站，验证地址栏无证书警告即为成功</span></div>
     </div>
-    <div class="note"><strong>⚠ 重要：</strong>iOS 建议优先使用 <code>cert.anything.test</code> 下载。安装后还需在「证书信任设置」中手动启用完全信任。</div>
+    <div class="note"><strong>⚠ 常见问题：</strong><br>
+    • <strong>找不到「VPN 与设备管理」？</strong> → 不同 iOS 版本名称不同，可能叫「描述文件」或「描述文件与设备管理」<br>
+    • <strong>安装后仍报证书错误？</strong> → 99% 是因为没有执行第 8-9 步的「证书信任设置」，这是 iOS 的硬性要求<br>
+    • <strong>非 Safari 浏览器下载无反应？</strong> → iOS 仅允许 Safari 安装描述文件，请切换到 Safari 重新下载<br>
+    • <strong>使用完毕后</strong> → 记得回到 Wi-Fi 设置将代理改回「关闭」或「自动」</div>
   </div>
 
   <div id="tab-android" class="tab-content${platform === "android" ? " active" : ""}">
     <div class="steps">
       <h2>Android 安装步骤</h2>
-      <div class="step"><span class="step-num">1</span><span>点击上方按钮下载证书文件</span></div>
-      <div class="step"><span class="step-num">2</span><span>打开「设置」→「安全」→「加密与凭据」→「安装证书」→「CA 证书」</span></div>
-      <div class="step"><span class="step-num">3</span><span>选择已下载的证书文件并确认安装</span></div>
-      <div class="step"><span class="step-num">4</span><span>部分系统需要在 WiFi 设置中将证书类型选为「VPN 和应用」或「WLAN」</span></div>
+      <div class="step"><span class="step-num">1</span><span>确保手机与电脑连接在<strong>同一局域网</strong>下</span></div>
+      <div class="step"><span class="step-num">2</span><span>打开「设置」→「WLAN」→ <strong>长按</strong>当前连接的 Wi-Fi（或点击齿轮图标）→ 选择「修改网络」</span></div>
+      <div class="step"><span class="step-num">3</span><span>展开「高级选项」→ 代理选择「手动」→ 主机名填<strong>电脑的 IP 地址</strong>，端口填 <strong>代理端口号</strong>（默认 8888）→ 保存</span></div>
+      <div class="step"><span class="step-num">4</span><span>打开任意浏览器，访问本页面并点击上方「下载证书」按钮，将 .cer 文件保存到手机</span></div>
+      <div class="step"><span class="step-num">5</span><span><strong>方式一（推荐）：</strong>打开「设置」→「安全」（或「安全和隐私」）→「更多安全设置」→「加密与凭据」→「安装证书」→ 选择「<strong>CA 证书</strong>」</span></div>
+      <div class="step"><span class="step-num">6</span><span>系统会弹出安全警告「安装 CA 证书可能允许第三方监控流量...」→ 点击「<strong>仍然安装</strong>」→ 验证指纹/密码/PIN</span></div>
+      <div class="step"><span class="step-num">7</span><span>在文件选择器中找到刚下载的 <code>anything-analyzer-ca.cer</code> 文件（通常在 Download 文件夹）→ 点击选择</span></div>
+      <div class="step"><span class="step-num">8</span><span>提示「已安装 CA 证书」即为成功</span></div>
     </div>
-    <div class="note"><strong>⚠ 注意：</strong>Android 7+ 默认不信任用户安装的 CA 证书。如需系统级信任，需要 root 或使用 Magisk 模块。大多数浏览器和应用仍可工作。</div>
+    <div class="steps" style="margin-top:12px">
+      <h2>⚡ 验证证书是否安装成功</h2>
+      <div class="step"><span class="step-num">1</span><span>前往「设置」→「安全」→「加密与凭据」→「信任的凭据」→ 切换到「用户」选项卡</span></div>
+      <div class="step"><span class="step-num">2</span><span>应能看到「Anything Analyzer CA」→ 点击可查看证书详情和有效期</span></div>
+    </div>
+    <div class="steps" style="margin-top:12px">
+      <h2>🔧 不同 Android 品牌的设置路径</h2>
+      <div class="step"><span class="step-num">•</span><span><strong>小米/Redmi (MIUI/HyperOS)：</strong>设置 → 密码与安全 → 系统安全 → 加密与凭据 → 安装证书 → CA 证书</span></div>
+      <div class="step"><span class="step-num">•</span><span><strong>华为/荣耀 (HarmonyOS)：</strong>设置 → 安全 → 更多安全设置 → 加密和凭据 → 从存储设备安装 → CA 证书</span></div>
+      <div class="step"><span class="step-num">•</span><span><strong>OPPO/realme (ColorOS)：</strong>设置 → 密码与安全 → 系统安全 → 安装证书 → CA 证书</span></div>
+      <div class="step"><span class="step-num">•</span><span><strong>vivo (OriginOS/FuntouchOS)：</strong>设置 → 安全与隐私 → 更多安全设置 → 加密与凭据 → 安装证书</span></div>
+      <div class="step"><span class="step-num">•</span><span><strong>三星 (One UI)：</strong>设置 → 生物识别和安全 → 其他安全设置 → 安装证书 → CA 证书</span></div>
+      <div class="step"><span class="step-num">•</span><span><strong>Google Pixel (原生)：</strong>设置 → 安全 → 加密与凭据 → 安装证书 → CA 证书</span></div>
+      <div class="step"><span class="step-num">•</span><span><strong>找不到入口？</strong>在设置中搜索「<strong>证书</strong>」或「<strong>凭据</strong>」关键词即可快速定位</span></div>
+    </div>
+    <div class="note"><strong>⚠ Android 特别说明：</strong><br>
+    • <strong>Android 7.0+ 限制：</strong>用户安装的 CA 证书默认只对<strong>浏览器</strong>有效，大部分 App 不信任用户 CA。这是 Google 的安全策略，属于正常现象<br>
+    • <strong>如需让所有 App 信任：</strong>需要 Root 权限 + 将证书移入系统证书目录（/system/etc/security/cacerts/），或使用 Magisk + MoveUserCertificates 模块<br>
+    • <strong>安装时要求设置锁屏？</strong>这是 Android 安全要求，安装 CA 证书必须设置 PIN/密码/图案锁屏<br>
+    • <strong>使用完毕后</strong> → 记得回到 Wi-Fi 设置将代理改回「无」</div>
   </div>
 
   <div id="tab-desktop" class="tab-content${platform === "desktop" ? " active" : ""}">
     <div class="steps">
       <h2>桌面端安装步骤</h2>
       <div class="step"><span class="step-num">1</span><span>推荐直接在 Anything Analyzer 应用内点击「安装证书」按钮一键安装</span></div>
-      <div class="step"><span class="step-num">2</span><span>或下载证书后手动双击安装到系统信任存储中</span></div>
+      <div class="step"><span class="step-num">2</span><span>或下载证书后手动双击安装到系统信任存储中（Windows 选择「受信任的根证书颁发机构」）</span></div>
+      <div class="step"><span class="step-num">3</span><span>macOS 用户需在「钥匙串访问」中找到证书 → 双击 → 展开「信任」→ 设为「始终信任」</span></div>
     </div>
   </div>
 </div>
@@ -123,10 +156,16 @@ function showTab(name, el){
 }
 
 /**
- * Get the CA certificate content as a Buffer for download.
- * Returns PEM-encoded certificate.
+ * Get the CA certificate content as PEM-encoded Buffer for download.
  */
 export function getCertFileContent(caManager: CaManager): Buffer {
   const certPath = caManager.getCaCertPath();
   return readFileSync(certPath);
+}
+
+/**
+ * Get the CA certificate content as DER-encoded Buffer for mobile download (.cer).
+ */
+export function getCertDerContent(caManager: CaManager): Buffer {
+  return caManager.getCaCertDer();
 }

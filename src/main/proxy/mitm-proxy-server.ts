@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from "uuid";
 import { SocksClient } from "socks";
 import type { CaManager } from "./ca-manager";
 import type { ProxyConfig } from "../../shared/types";
-import { generateCertPage, getCertFileContent, isCertDownloadHost } from "./cert-download-page";
+import { generateCertPage, getCertFileContent, getCertDerContent, isCertDownloadHost } from "./cert-download-page";
 
 const MAX_BODY_SIZE = 1024 * 1024; // 1MB — same limit as CdpManager
 const BINARY_CONTENT_TYPES = [
@@ -1041,10 +1041,21 @@ export class MitmProxyServer extends EventEmitter {
     if (reqPath === "/cert.crt" || reqPath === "/cert.pem" || reqPath === "/cert.cer") {
       // Serve the CA certificate file for download
       try {
-        const certContent = getCertFileContent(this.caManager);
+        // .cer → DER (binary) format for mobile compatibility
+        // .crt / .pem → PEM (text) format
+        const isDer = reqPath === "/cert.cer";
+        const certContent = isDer
+          ? getCertDerContent(this.caManager)
+          : getCertFileContent(this.caManager);
+        const contentType = isDer
+          ? "application/x-x509-ca-cert"
+          : "application/x-pem-file";
+        const filename = isDer
+          ? "anything-analyzer-ca.cer"
+          : "anything-analyzer-ca.pem";
         res.writeHead(200, {
-          "Content-Type": "application/pkix-cert",
-          "Content-Disposition": "attachment; filename=\"anything-analyzer-ca.cer\"",
+          "Content-Type": contentType,
+          "Content-Disposition": `attachment; filename=\"${filename}\"`,
           "Content-Length": certContent.length,
           "Cache-Control": "no-cache",
         });

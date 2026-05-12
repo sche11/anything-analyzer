@@ -55,6 +55,16 @@ export class CaManager {
   }
 
   /**
+   * Get the CA certificate in DER (binary) format for mobile download.
+   */
+  getCaCertDer(): Buffer {
+    if (!this.caCert) throw new Error("CA not initialized");
+    const asn1 = forge.pki.certificateToAsn1(this.caCert);
+    const der = forge.asn1.toDer(asn1);
+    return Buffer.from(der.getBytes(), "binary");
+  }
+
+  /**
    * Get (or create) a TLS SecureContext for the given hostname.
    */
   getSecureContextForHost(hostname: string): tls.SecureContext {
@@ -170,13 +180,21 @@ export class CaManager {
       },
       { name: "extKeyUsage", serverAuth: true },
       { name: "subjectAltName", altNames },
+      { name: "subjectKeyIdentifier" },
+      {
+        name: "authorityKeyIdentifier",
+        keyIdentifier: true,
+      },
     ]);
 
     cert.sign(this.caKey.privateKey, forge.md.sha256.create());
 
+    // Include CA cert in chain so mobile clients can verify
+    const leafPem = forge.pki.certificateToPem(cert);
+    const caPem = forge.pki.certificateToPem(this.caCert!);
     return {
       key: forge.pki.privateKeyToPem(keys.privateKey),
-      cert: forge.pki.certificateToPem(cert),
+      cert: leafPem + caPem,
     };
   }
 
