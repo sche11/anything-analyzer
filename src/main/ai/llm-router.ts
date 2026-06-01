@@ -709,7 +709,10 @@ export class LLMRouter {
       }
       if (currentEvent === "error" || currentEvent === "response.failed") {
         const errorMsg =
-          parsed.message || parsed.error?.message || "Unknown stream error";
+          parsed.message ||
+          parsed.error?.message ||
+          parsed.response?.error?.message ||
+          "Unknown stream error";
         throw new Error(`Responses API stream error: ${errorMsg}`);
       }
     };

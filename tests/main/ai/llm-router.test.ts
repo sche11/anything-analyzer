@@ -343,6 +343,24 @@ describe("LLMRouter", () => {
         router.complete([{ role: "user", content: "test" }], () => {}),
       ).rejects.toThrow("Responses API stream error: rate limit exceeded");
     });
+
+    it("should read nested Responses API stream failure messages", async () => {
+      const config: LLMProviderConfig = { ...baseConfig, apiType: "responses" };
+      fetchSpy.mockResolvedValueOnce(
+        createSSEResponse([
+          {
+            event: "response.failed",
+            data: '{"response":{"error":{"message":"model overloaded"}}}',
+          },
+        ]),
+      );
+
+      const router = new LLMRouter(config);
+
+      await expect(
+        router.complete([{ role: "user", content: "test" }], () => {}),
+      ).rejects.toThrow("Responses API stream error: model overloaded");
+    });
   });
 
   describe("completeOpenAI - streaming", () => {

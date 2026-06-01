@@ -1,16 +1,16 @@
-# Anything Analyzer v3.6.17
+# Anything Analyzer v3.6.18
 
 ## 修复
 
-- **OpenAI Chat 流式错误不再被吞掉** — 修复 Chat Completions SSE 返回 `error` payload 时被当成空成功响应的问题
-  - 将流式 JSON 容错解析与 API 错误判断拆开，保留 malformed chunk 跳过逻辑
-  - 增加错误 payload 回归测试，确保限流、鉴权等流式错误会抛给调用方
+- **Responses API 流式失败信息更准确** — 修复 `response.failed` SSE 将嵌套错误消息显示为 `Unknown stream error` 的问题
+  - 兼容 `response.error.message` 结构，保留现有顶层 `message` 和 `error.message` 处理
+  - 增加嵌套失败事件回归测试，确保模型过载等错误能直接反馈给调用方
 
 ## 下载
 
 | 平台 | 文件 |
 |------|------|
-| Windows | Anything-Analyzer-Setup-3.6.17.exe |
-| macOS (Apple Silicon) | Anything-Analyzer-3.6.17-arm64.dmg |
-| macOS (Intel) | Anything-Analyzer-3.6.17-x64.dmg |
-| Linux | Anything-Analyzer-3.6.17.AppImage |
+| Windows | Anything-Analyzer-Setup-3.6.18.exe |
+| macOS (Apple Silicon) | Anything-Analyzer-3.6.18-arm64.dmg |
+| macOS (Intel) | Anything-Analyzer-3.6.18-x64.dmg |
+| Linux | Anything-Analyzer-3.6.18.AppImage |
