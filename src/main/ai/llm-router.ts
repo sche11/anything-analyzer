@@ -346,6 +346,7 @@ export class LLMRouter {
         }
 
         for (const tc of assistantMsg.tool_calls) {
+          if (typeof tc.function?.arguments !== "string") throw new Error("tool_call arguments must be a string");
           let result: string;
           try {
             const args = JSON.parse(tc.function.arguments);

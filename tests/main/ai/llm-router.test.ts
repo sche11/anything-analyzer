@@ -579,6 +579,39 @@ describe("LLMRouter", () => {
     });
   });
 
+  describe("completeWithTools - OpenAI", () => {
+    it("should reject OpenAI tool calls with non-string arguments", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        createJSONResponse({
+          choices: [
+            {
+              message: {
+                content: null,
+                tool_calls: [
+                  {
+                    id: "call-1",
+                    type: "function",
+                    function: { name: "lookup", arguments: { query: "test" } },
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+      );
+
+      const router = new LLMRouter(baseConfig);
+
+      await expect(
+        router.completeWithTools(
+          [{ role: "user", content: "test" }],
+          [{ name: "lookup", description: "Lookup", inputSchema: { type: "object" } }],
+          async () => "unused",
+        ),
+      ).rejects.toThrow("tool_call arguments must be a string");
+    });
+  });
+
   describe("completeWithTools - Anthropic", () => {
     it("should reject final Anthropic tool loop responses without text content", async () => {
       const config: LLMProviderConfig = {
