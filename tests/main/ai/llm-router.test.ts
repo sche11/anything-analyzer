@@ -261,6 +261,16 @@ describe("LLMRouter", () => {
       ).rejects.toThrow("LLM 响应格式异常: 缺少 choices 字段");
     });
 
+    it("should reject non-object OpenAI completion JSON with a clear format error", async () => {
+      fetchSpy.mockResolvedValueOnce(createJSONResponse(null));
+
+      const router = new LLMRouter(baseConfig);
+
+      await expect(
+        router.complete([{ role: "user", content: "test" }]),
+      ).rejects.toThrow("LLM 响应格式异常: 缺少 choices 字段");
+    });
+
     it("should reject OpenAI completion choices without message content", async () => {
       fetchSpy.mockResolvedValueOnce(
         createJSONResponse({

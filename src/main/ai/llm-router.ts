@@ -136,7 +136,9 @@ export class LLMRouter {
     }
 
     // Anthropic error format: { type: "error", error: { type, message } }
-    const obj = data as Record<string, unknown>;
+    const obj = data !== null && typeof data === "object"
+      ? data as Record<string, unknown>
+      : {};
     if (obj.type === 'error' && typeof obj.error === 'object' && obj.error !== null) {
       const err = obj.error as Record<string, unknown>;
       throw new Error(`LLM API 错误: ${err.type ?? 'unknown'} — ${err.message ?? JSON.stringify(err)}`);
@@ -153,7 +155,7 @@ export class LLMRouter {
       throw new Error(`LLM API 错误: ${err.message ?? JSON.stringify(err)}`);
     }
 
-    return data as T;
+    return obj as T;
   }
 
   async complete(
