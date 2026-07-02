@@ -18,13 +18,33 @@ describe("macOS 发布工作流", () => {
     expect(workflow).toContain("uses: softprops/action-gh-release@v3");
   });
 
-  it("应该在同一个 macOS 构建中产出 x64 和 arm64 更新元数据", () => {
+  it("应该分别在 Intel 和 Apple Silicon runner 上构建 macOS x64 与 arm64 包", () => {
     const workflow = readWorkspaceFile(".github/workflows/build.yml");
 
     expect(workflow).toContain("platform: mac");
-    expect(workflow).toContain("npx electron-builder --mac --x64 --arm64 --publish never");
-    expect(workflow).toContain("grep -q 'arm64\\.zip' dist/latest-mac.yml");
-    expect(workflow).toContain("grep -q 'x64\\.zip' dist/latest-mac.yml");
+    expect(workflow).toContain("os: macos-15-intel");
+    expect(workflow).toContain("arch: x64");
+    expect(workflow).toContain("os: macos-15");
+    expect(workflow).toContain("arch: arm64");
+    expect(workflow).toContain("npx electron-builder --mac --${{ matrix.arch }} --publish never");
+    expect(workflow).not.toContain("npx electron-builder --mac --x64 --arm64 --publish never");
+  });
+
+  it("应该在发布前校验 better-sqlite3 原生模块与 macOS 目标架构一致", () => {
+    const workflow = readWorkspaceFile(".github/workflows/build.yml");
+
+    expect(workflow).toContain("better-sqlite3/build/Release/better_sqlite3.node");
+    expect(workflow).toContain("file \"$native_module\" | tee \"dist/better-sqlite3-${{ matrix.arch }}.txt\"");
+    expect(workflow).toContain("grep -Eq \"x86_64|x86_64h\" \"dist/better-sqlite3-${{ matrix.arch }}.txt\"");
+    expect(workflow).toContain("grep -q \"arm64\" \"dist/better-sqlite3-${{ matrix.arch }}.txt\"");
+  });
+
+  it("应该将拆分构建后的 macOS 更新元数据合并为 latest-mac.yml", () => {
+    const workflow = readWorkspaceFile(".github/workflows/build.yml");
+
+    expect(workflow).toContain("mv \"dist/latest-mac.yml\" \"dist/latest-mac-${{ matrix.arch }}.yml\"");
+    expect(workflow).toContain("Merge macOS update metadata");
+    expect(workflow).toContain("artifacts/latest-mac.yml");
   });
 
   it("应该仅在 macOS 代码签名 secrets 存在时注入并校验签名", () => {

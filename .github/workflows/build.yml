@@ -15,9 +15,12 @@ jobs:
           - os: windows-latest
             platform: win
             arch: x64
-          - os: macos-latest
+          - os: macos-15-intel
             platform: mac
-            arch: universal
+            arch: x64
+          - os: macos-15
+            platform: mac
+            arch: arm64
           - os: ubuntu-latest
             platform: linux
             arch: x64
@@ -73,10 +76,29 @@ jobs:
 
       - name: Package for macOS
         if: matrix.platform == 'mac'
+        shell: bash
         run: |
-          npx electron-builder --mac --x64 --arm64 --publish never
-          grep -q 'arm64\.zip' dist/latest-mac.yml
-          grep -q 'x64\.zip' dist/latest-mac.yml
+          set -euo pipefail
+          npx electron-builder --mac --${{ matrix.arch }} --publish never
+
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            app_dir="dist/mac-arm64/Anything Analyzer.app"
+          else
+            app_dir="dist/mac/Anything Analyzer.app"
+          fi
+
+          native_module="$app_dir/Contents/Resources/app.asar.unpacked/node_modules/better-sqlite3/build/Release/better_sqlite3.node"
+          test -f "$native_module"
+          file "$native_module" | tee "dist/better-sqlite3-${{ matrix.arch }}.txt"
+
+          if [ "${{ matrix.arch }}" = "x64" ]; then
+            grep -Eq "x86_64|x86_64h" "dist/better-sqlite3-${{ matrix.arch }}.txt"
+          else
+            grep -q "arm64" "dist/better-sqlite3-${{ matrix.arch }}.txt"
+          fi
+
+          grep -q "${{ matrix.arch }}\.zip" "dist/latest-mac.yml"
+          mv "dist/latest-mac.yml" "dist/latest-mac-${{ matrix.arch }}.yml"
 
       - name: Verify macOS signing configuration
         if: matrix.platform == 'mac'
@@ -131,6 +153,58 @@ jobs:
 
       - name: List artifacts
         run: find artifacts -type f | head -30
+
+      - name: Merge macOS update metadata
+        run: |
+          node <<'NODE'
+          const crypto = require("crypto");
+          const fs = require("fs");
+          const path = require("path");
+
+          const artifactsDir = "artifacts";
+          const version = (process.env.GITHUB_REF_NAME || "").replace(/^v/, "");
+
+          if (!version) {
+            throw new Error("GITHUB_REF_NAME must contain the release tag");
+          }
+
+          const artifactNames = fs.readdirSync(artifactsDir);
+          const macFiles = ["x64", "arm64"].map((arch) => {
+            const zipName = artifactNames.find((name) => name.endsWith(`-${arch}.zip`));
+
+            if (!zipName) {
+              throw new Error(`Missing macOS ${arch} zip artifact`);
+            }
+
+            const zipPath = path.join(artifactsDir, zipName);
+            const zipBuffer = fs.readFileSync(zipPath);
+
+            return {
+              sha512: crypto.createHash("sha512").update(zipBuffer).digest("base64"),
+              size: fs.statSync(zipPath).size,
+              zipName,
+            };
+          });
+
+          const latestMac = [
+            `version: ${version}`,
+            "files:",
+            ...macFiles.flatMap((file) => [
+              `  - url: ${file.zipName}`,
+              `    sha512: ${file.sha512}`,
+              `    size: ${file.size}`,
+            ]),
+            `path: ${macFiles[0].zipName}`,
+            `sha512: ${macFiles[0].sha512}`,
+            `releaseDate: '${new Date().toISOString()}'`,
+            "",
+          ].join("\n");
+
+          fs.writeFileSync(path.join(artifactsDir, "latest-mac.yml"), latestMac);
+          fs.rmSync(path.join(artifactsDir, "latest-mac-x64.yml"), { force: true });
+          fs.rmSync(path.join(artifactsDir, "latest-mac-arm64.yml"), { force: true });
+          NODE
+          test -f "artifacts/latest-mac.yml"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
