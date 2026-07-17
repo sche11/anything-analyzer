@@ -267,7 +267,7 @@ Thanks to everyone on [LinuxDo](https://linux.do/) for their support!
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Mouseww/anything-analyzer&type=Date)](https://star-history.com/#Mouseww/anything-analyzer&Date)
+[![Star History Chart](https://api.star-history.com/chart?repos=Mouseww/anything-analyzer&type=date&legend=top-left&sealed_token=ubAtBZiX6zZVGPkbUHr-W8YvpMU3aXgJoWOBiqBNsEUPIL_cElazeGyD6h20cwsWeWbP0cncUSWzrh4bxTTpTf5pAQlvyMGxIA9M0z3UyPeZeo8YR0wo7KJjg7vDukdW77TK0Bat3t-rZ9_oFwA1p-EZGydvVSMmLxMFDo6LsFfVUM4tav6Oh7Ujgqhn)](https://www.star-history.com/?repos=Mouseww%2Fanything-analyzer&type=date&legend=top-left)
 
 ## License
 
